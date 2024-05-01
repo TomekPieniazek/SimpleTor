@@ -10,8 +10,8 @@ class Server:
         self.port = port
 
     def start(self):
-        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.bind((self.ip, self.port))
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket.bind((self.ip, self.port))
 
         first_layer = ['87.206.157.239']  # Operują na porcie 50001
         second_layer = ['79.190.177.172']  # Operują na porcie 50002
@@ -27,7 +27,7 @@ class Server:
         global x
 
         while True:
-            client, addr = server.accept()
+            client, addr = server_socket.accept()
 
             client_handler = threading.Thread(target=self.handle_client, args=(client,))
             client_handler.start()
@@ -35,6 +35,13 @@ class Server:
     def create_header(self, message):
         header = f"{len(message):<5}"
         return header
+
+    def write_message(self, client, message):
+        header = self.create_header(message)
+
+        client.send(header.encode("utf-8"))
+        client.send(message.encode("utf-8"))
+
     def receive_message(self, client):
         message_len = int(client.recv(5).decode("utf-8"))
         message = client.recv(message_len)
@@ -44,27 +51,9 @@ class Server:
         else:
             message.decode("utf-8")
 
-    def write_message(self, client, message):
-        header = self.create_header(message)
-
-        client.send(header.encode("utf-8"))
-        client.send(message.encode("utf-8"))
-
-
     def handle_client(self, client):
         message = self.receive_message(client)
 
         if message == "get":
             client.send(json.dumps(x).encode("utf-8"))
-
-    def receive_decriptor(self):
-        pass
-
-    def 
-
-
-
-
-
-
 
