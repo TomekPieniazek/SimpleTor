@@ -9,21 +9,23 @@ class Node:
         self.publicKey = publicKey
         self.privateKey = privateKey
 
-    def handleConenction(self, client_socket):
+    def handle_connection(self, client_socket):
         pass
 
-    def createHeader(self, encoded_message):
+    def create_header(self, encoded_message):
         message_length = len(encoded_message)
 
         if message_length >= 10_000:
             raise ValueError("Message is too long")
 
-        return f"{message_length:>5}"
+        return f"{message_length:>5}".encode("utf-8")
 
-    def sendMessage(self, message):
-        pass
+    def send_message(self, encoded_message, client_socket):
+        header = self.create_header(encoded_message)
 
-    def receiveMessage(self, client_socket):
+        client_socket.sendall(header + encoded_message)
+
+    def receive_message(self, client_socket):
         expected_message_len = int(client_socket.recv(5).decode("utf-8"))
         received_message = client_socket.recv(expected_message_len)
 
@@ -32,16 +34,16 @@ class Node:
 
         return received_message.decode("utf-8")
 
-    def forwardMessage(self, message):
+    def forward_message(self, message):
         pass
 
-    def backMessage(self, message):
+    def back_message(self, message):
         pass
 
-    def decryptMessage(self, message):
+    def decrypt_message(self, message):
         pass
 
-    def startNode(self):
+    def start_node(self):
         node_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         node_socket.bind((self.ip, self.port))
         node_socket.listen(10)
@@ -49,6 +51,6 @@ class Node:
         while True:
             client_socket, address = node_socket.accept()
 
-            client_handler = threading.Thread(target=self.handleConenction, args=(client_socket,))
+            client_handler = threading.Thread(target=self.handle_connection, args=(client_socket,))
             client_handler.start()
 
