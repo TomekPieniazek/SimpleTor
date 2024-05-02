@@ -12,6 +12,14 @@ class Node:
     def handleConenction(self, client_socket):
         pass
 
+    def createHeader(self, encoded_message):
+        message_length = len(encoded_message)
+
+        if message_length >= 10_000:
+            raise ValueError("Message is too long")
+
+        return f"{message_length:>5}"
+
     def sendMessage(self, message):
         pass
 
