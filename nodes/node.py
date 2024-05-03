@@ -40,6 +40,12 @@ class Node:
     def decrypt_message(self, message):
         pass
 
+    def establish_shared_secret(self):
+        pass
+
+    def establish_circuits(self):
+        pass
+
     def start_node(self):
         node_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         node_socket.bind((self.ip, self.port))
