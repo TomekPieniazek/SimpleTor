@@ -9,7 +9,7 @@ class Node:
         self.publicKey = publicKey
         self.privateKey = privateKey
 
-    def handle_connection(self, client_socket):
+    def handle_connection(self, client_socket, client_address):
         pass
 
     def create_header(self, encoded_message):
@@ -37,9 +37,6 @@ class Node:
     def forward_message(self, message):
         pass
 
-    def back_message(self, message):
-        pass
-
     def decrypt_message(self, message):
         pass
 
@@ -49,8 +46,8 @@ class Node:
         node_socket.listen(10)
 
         while True:
-            client_socket, address = node_socket.accept()
+            client_socket, client_address = node_socket.accept()
 
-            client_handler = threading.Thread(target=self.handle_connection, args=(client_socket,))
+            client_handler = threading.Thread(target=self.handle_connection, args=(client_socket, client_address))
             client_handler.start()
 
