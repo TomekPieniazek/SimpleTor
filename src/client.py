@@ -18,7 +18,7 @@ class Client:
     def write(self, message):
         header = self.create_header(message)
         s.send(header.encode("utf-8"))
-        s.send(message.encode("utf-8")
+        s.send(message.encode("utf-8"))
 
     def choice(self):
         options = ["get", "send", "delete", "post"]

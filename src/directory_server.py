@@ -44,8 +44,12 @@ class Server:
     def handle_client(self, client):
         message = self.receive(client)
 
-        if message == "get":
-            client.send(json.dumps(x).encode("utf-8"))
+        match message:
+            case "get":
+                client.send(json.dumps(x).encode("utf-8"))
+            case "get_second_connection":
+                client.send(x["second_layer"].encode("utf-8"))
+
 
 
 
