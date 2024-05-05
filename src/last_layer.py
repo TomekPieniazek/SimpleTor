@@ -26,11 +26,11 @@ class Proxy:
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((server_ip, server_port))
-            s.send(b'get_second_connection')
+            s.send(b'get_main_data_server')
 
-            second_connection = self.receive(s)
+            main_data_server = self.receive(s)
             s.close()
-            return second_connection
+            return main_data_server
         except Exception as e:
             print(f"Error connecting to directory server: {e}")
             return None
@@ -50,7 +50,7 @@ class Proxy:
             return
 
         resource_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        resource_socket.connect((resource_server_ip, 50002))
+        resource_socket.connect((resource_server_ip, 50004))
         resource_socket.send(json.dumps({'request': 'get_resource', 'resource_id': resource_id}).encode())
 
         resource_data = self.receive(resource_socket)
