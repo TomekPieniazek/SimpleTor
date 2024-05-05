@@ -16,10 +16,13 @@ class Node:
         with open(public_key_path, 'rb') as f:
             self.public_key = RSA.importKey(f.read())
 
-    def handle_connection(self, client_socket, client_address):
-        print(f"Client {client_address} connected")
+    def handle_connection(self, alice_socket):
+        message = self.receive_message(alice_socket)
+        ip, port = "<3"
 
-        message = self.receive_message(client_socket)
+        bob_socket = self.establish_circuit(ip, port)
+
+        self.handle_messages(alice_socket, bob_socket)
 
     def create_header(self, encoded_message):
         message_length = len(encoded_message)
@@ -50,8 +53,18 @@ class Node:
 
             return None
 
-    def forward_message(self, message):
-        pass
+    def forward_message(self, sender_socket, receiver_socket):
+        while True:
+            message = self.receive_message(sender_socket)
+            if message is not None:
+                self.send_message(receiver_socket, message)
+
+    def handle_messages(self, alice_socket, bob_socket):
+        alice_messages = threading.Thread(target=self.forward_message, args=(alice_socket, bob_socket))
+        alice_messages.start()
+
+        bob_messages = threading.Thread(target=self.forward_message, args=(bob_socket, alice_socket))
+        bob_messages.start()
 
     def decrypt_message(self, message):
         try:
