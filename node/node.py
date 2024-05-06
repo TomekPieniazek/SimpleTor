@@ -95,6 +95,7 @@ class Node:
         node_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         node_socket.bind((self.ip, self.port))
         node_socket.listen(10)
+        print(f"Node started at {self.ip}, and port: {self.port}")
 
         while True:
             client_socket, client_address = node_socket.accept()
