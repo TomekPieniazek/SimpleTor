@@ -1,11 +1,31 @@
-import base64
-
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization, padding
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
+
+def generate_rsa_key_pair():
+    private_key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=2048,
+        backend=default_backend()
+    )
+
+    public_key = private_key.public_key()
+
+    private_key_pem = private_key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+    )
+
+    public_key_pem = public_key.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
+
+    return private_key_pem, public_key_pem
 
 def encrypt_message(public_key, message):
     public_key_obj = serialization.load_pem_public_key(
@@ -71,25 +91,3 @@ def decrypt(encrypted_string):
             simple_list.append(third_lane.pop(0))
 
     return ''.join(simple_list)
-
-
-with open('../keys/private_key_1.pem', 'rb') as f:
-    private_key_1 = f.read()
-
-with open('../keys/public_key_1.pem', 'rb') as f:
-    public_key_1 = f.read()
-
-with open('../keys/private_key_2.pem', 'rb') as f:
-    private_key_2 = f.read()
-
-with open('../keys/public_key_2.pem', 'rb') as f:
-    public_key_2 = f.read()
-
-test = 'Kubus Puchatek'
-f_cipher = encrypt_message(public_key_1, test)
-f_cipher = base64.standard_b64encode(f_cipher).decode()
-f_cipher = encrypt(f_cipher)
-print(f'Encrypted message: {f_cipher}')
-
-# s_plain = decrypt_message(private_key_1, f_cipher)
-# print(f'Double decrypted message: {s_plain}')
