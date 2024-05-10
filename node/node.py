@@ -1,7 +1,7 @@
 import socket
 import threading
-from Crypto.Cipher import AES
-from Crypto.PublicKey import RSA
+from rsa.rsa import decrypt_message
+
 
 class Node:
     def __init__(self, ip, port, nickname, private_key_path, public_key_path):
@@ -11,14 +11,14 @@ class Node:
         self.public_key_path = public_key_path
         self.private_key_path = private_key_path
 
-        with open(private_key_path, 'rb') as f:
-            self.private_key = RSA.importKey(f.read())
-        with open(public_key_path, 'rb') as f:
-            self.public_key = RSA.importKey(f.read())
+        with open(private_key_path, 'r') as f:
+            self.private_key =
+        with open(public_key_path, 'r') as f:
+            self.public_key =
 
     def handle_connection(self, alice_socket):
         message = self.receive_message(alice_socket)
-        ip, port = "<3"
+        ip, port = "s"
 
         bob_socket = self.establish_circuit(ip, port)
 
@@ -85,7 +85,7 @@ class Node:
             print(f"Error decrypting message: {e}")
             return None
 
-    def establish_circuit(self, ip, port):
+    def establish_circuit(ip, port):
         next_hop_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         next_hop_socket.connect((ip, port))
 
