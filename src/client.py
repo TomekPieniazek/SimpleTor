@@ -20,6 +20,17 @@ class Client:
         header = f"{len(message):<5}"
         return header
 
+    def triple_layer_encryption(self, key_1: str, key_2: str, key_3: str, ip_1: str, ip_2: str, ip_3: str, port_1: int,
+                                port_2: int, port_3: int, messages: str) -> str:
+        message = messages + "DATA" + {"ip": ip_1, "port": port_1}
+        encrypt_message(key_1, message)
+        message += "DATA" + {"ip": ip_2, "port": port_2}
+        encrypt_message(key_2, message)
+        message += "DATA" + {"ip": ip_3, "port": port_3}
+        encrypt_message(key_3, message)
+
+        return message
+
     def write(self, message: str) -> None:
         header = self.create_header(message)
         s.send(header.encode("utf-8"))
@@ -83,9 +94,7 @@ def main():
 
     client = Client(client_ip, client_port)
 
-    server_ip = "127.0.0.1"
-    client.connect_to_direct_server(server_ip)
-    client.choice()
+    
 
 
 if __name__ == "__main__":
