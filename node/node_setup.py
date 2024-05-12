@@ -1,20 +1,19 @@
 import socket
 
 from node import Node
-from Crypto.PublicKey import RSA
+from rsa.rsa import generate_rsa_key_pair
 
 
 def generate_key_pair(key_size=2048):
-    key = RSA.generate(key_size)
+    key = generate_key_pair()
 
     private_key_path = "private.pem"
     public_key_path = "public.pem"
 
-    private_key = key.export_key()
+    private_key, public_key = generate_key_pair()
     with open("private.pem", "ab") as f:
         f.write(private_key)
 
-    public_key = key.publickey().export_key()
     with open("public.pem", "ab") as f:
         f.write(public_key)
 

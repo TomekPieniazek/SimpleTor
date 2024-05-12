@@ -27,6 +27,7 @@ def generate_rsa_key_pair():
 
     return private_key_pem, public_key_pem
 
+
 def encrypt_message(public_key, message):
     public_key_obj = serialization.load_pem_public_key(
         public_key,

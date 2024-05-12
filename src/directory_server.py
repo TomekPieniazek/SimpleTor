@@ -5,7 +5,7 @@ import threading
 
 
 class Server:
-    def __init__(self, ip, port, s): # port is 50005 
+    def __init__(self, ip, port):  # port is 50005
         self.ip = ip
         self.port = port
 
@@ -17,17 +17,18 @@ class Server:
         second_layer = ['79.190.177.172']  # Operują na porcie 50002
         last_layer = ['87.206.157.239']  # Operują na porcie 50003
         main_data_server = ['79.190.177.172']  # Operują na porcie 50004
-
+        global x
         x = {
             "first_layer": choice(first_layer),
             "second_layer": choice(second_layer),
             "last_layer": choice(last_layer),
             "main_data_server": choice(main_data_server)
         }
-        global x
 
         while True:
+            s.listen(5)
             client, addr = s.accept()
+
 
             client_handler = threading.Thread(target=self.handle_client, args=(client,))
             client_handler.start()
@@ -55,10 +56,12 @@ class Server:
                 client.send(x["main_data_server"].encode("utf-8"))
 
 
+def main():
+    server_ip = "127.0.0.1"
+    server_port = 50005
+    server = Server(server_ip, server_port)
+    server.start()
 
 
-
-
-
-
-
+if __name__ == "__main__":
+    main()
