@@ -4,13 +4,13 @@ from node import Node
 from rsa.rsa import generate_rsa_key_pair
 
 
-def generate_key_pair(key_size=2048):
-    key = generate_key_pair()
+def generate_key_pair():
+
 
     private_key_path = "private.pem"
     public_key_path = "public.pem"
 
-    private_key, public_key = generate_key_pair()
+    private_key, public_key = generate_rsa_key_pair()
     with open("private.pem", "ab") as f:
         f.write(private_key)
 

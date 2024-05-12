@@ -98,13 +98,3 @@ class Node:
             client_handler.start()
 
 
-def main():
-    ip = '127.0.0.1'
-    port = 50001
-
-    node = Node(ip, port, 'Alice', '../keys/private_key_1.pem', '../keys/public_key_1.pem')
-    node.start_node()
-
-
-if __name__ == "__main__":
-    main()

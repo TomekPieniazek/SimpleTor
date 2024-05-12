@@ -21,15 +21,24 @@ class Client:
         return header
 
     def triple_layer_encryption(self, key_1: str, key_2: str, key_3: str, ip_1: str, ip_2: str, ip_3: str, port_1: int,
-                                port_2: int, port_3: int, messages: str) -> str:
-        message = messages + "DATA" + {"ip": ip_1, "port": port_1}
-        encrypt_message(key_1, message)
-        message += "DATA" + {"ip": ip_2, "port": port_2}
-        encrypt_message(key_2, message)
-        message += "DATA" + {"ip": ip_3, "port": port_3}
-        encrypt_message(key_3, message)
+                                port_2: int, port_3: int, message: str) -> str:
+        message_1 = (message + "DATA" + json.dumps({"ip": ip_1, "port": port_1})).encode('utf-8')
+        message_1 = b''.join(
+            [encrypt_message(key_1.encode(), message_1[i:i + 245]) for i in range(0, len(message_1), 245)])
 
-        return message
+        message_2 = bytearray()
+        message_2.extend(message_1)
+        message_2.extend(("DATA" + json.dumps({"ip": ip_2, "port": port_2})).encode('utf-8'))
+        message_2 = b''.join(
+            [encrypt_message(key_2.encode(), bytes(message_2[i:i + 245])) for i in range(0, len(message_2), 245)])
+
+        message_3 = bytearray()
+        message_3.extend(message_2)
+        message_3.extend(("DATA" + json.dumps({"ip": ip_3, "port": port_3})).encode('utf-8'))
+        message_3 = b''.join(
+            [encrypt_message(key_3.encode(), bytes(message_3[i:i + 245])) for i in range(0, len(message_3), 245)])
+
+        return base64.b64encode(message_3).decode('utf-8')
 
     def write(self, message: str) -> None:
         header = self.create_header(message)
@@ -89,12 +98,30 @@ class Client:
 
 
 def main():
+
     client_ip = "127.0.0.1"
     client_port = 50000
-
     client = Client(client_ip, client_port)
+    with open('../node/public.pem', 'r') as file:
+        key_1 = file.read()
 
-    
+    with open('../keys/klucz_1.pem') as file:
+        key_2 = file.read()
+
+    with open('../keys/klucz_2.pem') as file:
+        key_3 = file.read()
+
+    triple_edict = client.triple_layer_encryption(key_1, key_2, key_3, '127.0.0.1', '87.206.157.239', '87.206.157.239', 50001, 50005, 50003, 'huj')
+    client.connect('127.0.0.1', 50001)
+    client.write(triple_edict)
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
 
 
 if __name__ == "__main__":
