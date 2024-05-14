@@ -91,11 +91,33 @@ class Node:
 
         return next_hop_socket
 
+    def announce_livenes(self):
+        try:
+            directory_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            directory_socket.connect("192.168.0.1", 50005)
+
+            message = {
+                "name": self.nickname,
+                "ip": self.ip,
+                "port": self.port
+            }
+
+            self.send_message(message, directory_socket)
+
+        except ConnectionError as e:
+            print(f"Error connecting to server {e}")
+
+        except Exception as e:
+            print(f"Error announcing liveness {e}")
+
+
     def start_node(self):
         node_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         node_socket.bind((self.ip, self.port))
         node_socket.listen(10)
         print(f"Node started at {self.ip}, and port: {self.port}")
+
+        self.announce_livenes()
 
         while True:
             client_socket, client_address = node_socket.accept()
