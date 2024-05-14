@@ -20,6 +20,21 @@ class Client:
         header = f"{len(message):<5}"
         return header
 
+    def ask_for_keys(self) -> Dict[str, Any]:
+        self.connect_to_direct_server('127.0.0.1', 50005)
+        s.write('get')
+        keys = receive(s)
+        return keys
+
+    def receive(self, client):
+        message_len = int(client.recv(5).decode("utf-8"))
+        message = client.recv(message_len)
+
+        if len(message) != message_len:
+            print("pies cie jebal")
+        else:
+            message.decode("utf-8")
+
     def triple_layer_encryption(self, key_1: str, key_2: str, key_3: str, ip_1: str, ip_2: str, ip_3: str, port_1: int,
                                 port_2: int, port_3: int, message: str) -> str:
         message_1 = (message + "DATA" + json.dumps({"ip": ip_1, "port": port_1})).encode('utf-8')
@@ -98,30 +113,19 @@ class Client:
 
 
 def main():
-
     client_ip = "127.0.0.1"
     client_port = 50000
     client = Client(client_ip, client_port)
-    with open('../node/public.pem', 'r') as file:
-        key_1 = file.read()
 
-    with open('../keys/klucz_1.pem') as file:
-        key_2 = file.read()
+    path = client.ask_for_keys()
+    Node_1 = path['Node_1']
+    Node_2 = path['Node_2']
+    Node_3 = path['Node_3']
 
-    with open('../keys/klucz_2.pem') as file:
-        key_3 = file.read()
-
-    triple_edict = client.triple_layer_encryption(key_1, key_2, key_3, '127.0.0.1', '87.206.157.239', '87.206.157.239', 50001, 50005, 50003, 'huj')
+    triple_edict = client.triple_layer_encryption(Node_1[0], Node_2[0], Node_3[0], Node_1[1], Node_2[1], Node_3[1],
+                                                  Node_1[2], Node_2[2], Node_3[2], "Hello World")
     client.connect('127.0.0.1', 50001)
     client.write(triple_edict)
-
-if __name__ == "__main__":
-    main()
-
-
-
-
-
 
 
 if __name__ == "__main__":
