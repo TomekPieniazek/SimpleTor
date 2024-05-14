@@ -1,7 +1,9 @@
 import socket
 import threading
-from Crypto.Cipher import AES
-from Crypto.PublicKey import RSA
+import json
+from rsa.rsa import decrypt_message
+from rsa.rsa import decrypt_message as rsa_decrypt
+
 
 class Node:
     def __init__(self, ip, port, nickname, private_key_path, public_key_path):
@@ -11,17 +13,20 @@ class Node:
         self.public_key_path = public_key_path
         self.private_key_path = private_key_path
 
-        with open(private_key_path, 'rb') as f:
-            self.private_key = RSA.importKey(f.read())
-        with open(public_key_path, 'rb') as f:
-            self.public_key = RSA.importKey(f.read())
+        with open(private_key_path, 'r') as f:
+            self.private_key = f.read()
+        with open(public_key_path, 'r') as f:
+            self.public_key = f.read()
 
     def handle_connection(self, alice_socket):
         message = self.receive_message(alice_socket)
-        ip, port = "<3"
+        message_data = message.split("DATA")
+        to_send, send_data = message_data[0], json.loads(message_data[1])
+        ip, port = send_data["ip"], send_data["port"]
 
         bob_socket = self.establish_circuit(ip, port)
 
+        self.handle_messages(alice_socket, bob_socket)
         self.handle_messages(alice_socket, bob_socket)
 
     def create_header(self, encoded_message):
@@ -68,19 +73,8 @@ class Node:
 
     def decrypt_message(self, message):
         try:
-            decrypted_key = self.private_key.decrypt(message, padding=RSA.pkcs1.OAEP(
-                mgf=RSA.pkcs1.MGF1(algorithm=hashes.SHA256())))
-
-            if len(decrypted_key) not in (16, 24, 32):
-                raise ValueError("Invalid AES key length")
-
-            aes_key = decrypted_key
-
-            cipher = AES.new(aes_key, AES.MODE_CBC)
-            decrypted_data = cipher.decrypt(message[len(decrypted_key):])
-
-            return decrypted_data.decode("utf-8")
-
+            decrypted_data = rsa_decrypt(self.private_key, message)
+            return decrypted_data
         except Exception as e:
             print(f"Error decrypting message: {e}")
             return None
@@ -110,7 +104,6 @@ class Node:
         except Exception as e:
             print(f"Error announcing liveness {e}")
 
-
     def start_node(self):
         node_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         node_socket.bind((self.ip, self.port))
@@ -124,4 +117,3 @@ class Node:
 
             client_handler = threading.Thread(target=self.handle_connection, args=(client_socket, client_address))
             client_handler.start()
-
