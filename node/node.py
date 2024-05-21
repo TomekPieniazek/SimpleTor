@@ -1,8 +1,7 @@
 import socket
 import threading
 import json
-from rsa.rsa import decrypt_message
-from rsa.rsa import decrypt_message as rsa_decrypt
+from rsa.rsa import rsa_decrypt
 
 
 class Node:
@@ -88,30 +87,13 @@ class Node:
     def announce_livenes(self):
         try:
             directory_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            directory_socket.connect("192.168.0.1", 50005)
-
-            message = {
-                "name": self.nickname,
-                "ip": self.ip,
-                "port": self.port
-            }
-
-            self.send_message(message, directory_socket)
-
-        except ConnectionError as e:
-            print(f"Error connecting to server {e}")
-
-        except Exception as e:
-            print(f"Error announcing liveness {e}")    def announce_livenes(self):
-        try:
-            directory_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            directory_socket.connect("192.168.0.1", 50005)
+            directory_socket.connect(("192.168.0.1", 50005))
 
             message = {
                 "type": "POST",
                 "name": self.nickname,
                 "ip": self.ip,
-                "port": self.port
+                "port": self.port,
                 "public_key": self.public_key,
             }
 
