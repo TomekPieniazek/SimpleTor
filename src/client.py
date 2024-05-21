@@ -126,7 +126,7 @@ class Client:
 
     def end_connection(self):
         self.s.close()
-        
+
     def client_connect(self, ip, port):
         self.s.connect((ip, port))
 
@@ -135,6 +135,8 @@ def main():
     client_ip = "127.0.0.1"
     client_port = 50000
     client = Client(client_ip, client_port)
+
+
     with open('../node/public.pem', 'rb') as file:
         rsa_key_1 = file.read()
 
@@ -150,7 +152,7 @@ def main():
     print(triple_edict)
     client.connect_to_direct_server('127.0.0.1')
     client.end_connection()
-    
+
     client.client_connect('127.0.0.1', 50001)
     client.write(triple_edict)
 

@@ -9,18 +9,18 @@ class Server:
         self.ip = ip
         self.port = port
 
-        self.node_list  = {}
+        self.node_list = {}
+
     def start(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind((self.ip, self.port))
         s.listen(10)
 
         while True:
-            client_socket, client_address =  s.accept()
+            client_socket, client_address = s.accept()
 
             client_handler = threading.Thread(target=self.client_handler(client_socket), args=(client_socket,))
             client_handler.start()
-
 
     def receive(self, client_socket):
         try:
@@ -48,11 +48,13 @@ class Server:
             client.send("Node registered successfully".encode("utf-8"))
 
         elif message["type"] == "GET":
-            random_nodes =random.samplce(list(self.node_list.keys()), 3)
+            random_nodes = random.sample(list(self.node_list.keys()), 3)
 
         else:
             client.send("Invalid request".encode("utf-8"))
-        node = choice(list(self.node_list.keys()))        client.send(json.dumps(self.node_list[node]).encode("utf-8"))
+        node = random.choice(list(self.node_list.keys()))
+        client.send(json.dumps(self.node_list[node]).encode("utf-8"))
+
 
 def main():
     server_ip = "127.0.0.1"
