@@ -1,8 +1,9 @@
+import base64
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization, padding
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives.asymmetric import rsa, padding
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+import os
 
 
 def generate_rsa_key_pair():
@@ -28,7 +29,7 @@ def generate_rsa_key_pair():
     return private_key_pem, public_key_pem
 
 
-def encrypt_message(public_key, message):
+def rsa_encrypt(message, public_key):
     public_key_obj = serialization.load_pem_public_key(
         public_key,
         backend=default_backend()
@@ -43,17 +44,17 @@ def encrypt_message(public_key, message):
             label=None
         )
     )
-    return cipher_text
+    return base64.b64encode(cipher_text)
 
 
-def decrypt_message(private_key, cipher_text):
+def rsa_decrypt(private_key, cipher_text):
     private_key_obj = serialization.load_pem_private_key(
         private_key,
         password=None,
         backend=default_backend()
     )
     plain_text = private_key_obj.decrypt(
-        cipher_text,
+        base64.b64decode(cipher_text),
         padding.OAEP(
             mgf=padding.MGF1(algorithm=hashes.SHA256()),
             algorithm=hashes.SHA256(),
@@ -63,32 +64,22 @@ def decrypt_message(private_key, cipher_text):
     return plain_text.decode()
 
 
-def encrypt(simple_string):
-    first_lane = simple_string[::4]
-    second_lane = simple_string[1::2]
-    third_lane = simple_string[2::4]
+def aes_encrypt(message, key):
+    iv = os.urandom(16)
+    cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=default_backend())
+    encryptor = cipher.encryptor()
+    ct = encryptor.update(message.encode()) + encryptor.finalize()
+    return base64.b64encode(iv + ct)
 
-    encrypted_phrase = ''.join(first_lane + second_lane + third_lane)
-    return encrypted_phrase
+
+def aes_decrypt(ciphertext, key):
+    ciphertext = base64.b64decode(ciphertext)
+    iv = ciphertext[:16]
+    ct = ciphertext[16:]
+    cipher = Cipher(algorithms.AES(key), modes.CFB(iv), backend=default_backend())
+    decryptor = cipher.decryptor()
+    return (decryptor.update(ct) + decryptor.finalize()).decode()
 
 
-def decrypt(encrypted_string):
-    length = len(encrypted_string)
-
-    first_lane_length = (length + 3) // 4
-    second_lane_length = length // 2
-
-    first_lane = list(encrypted_string[:first_lane_length])
-    second_lane = list(encrypted_string[first_lane_length:first_lane_length + second_lane_length])
-    third_lane = list(encrypted_string[first_lane_length + second_lane_length:])
-
-    simple_list = []
-    for i in range(length):
-        if i % 4 == 0:
-            simple_list.append(first_lane.pop(0))
-        elif i % 4 == 1 or i % 4 == 3:
-            simple_list.append(second_lane.pop(0))
-        elif i % 4 == 2:
-            simple_list.append(third_lane.pop(0))
-
-    return ''.join(simple_list)
+def generate_aes_key():
+    return os.urandom(32)

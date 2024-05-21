@@ -2,7 +2,7 @@ import base64
 import socket
 import json
 import random
-from rsa.rsa import encrypt_message, decrypt_message
+from rsa.rsa import rsa_encrypt, rsa_decrypt, aes_encrypt, aes_decrypt, generate_aes_key
 from typing import Any, Dict, Union
 
 
@@ -12,37 +12,68 @@ class Client:
         self.port: int = port
 
     def connect_to_direct_server(self, ip: str) -> None:
-        global s
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((ip, 50005))  # 50005 because this is the directory server
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s.connect((ip, 50005))  # 50005 because this is the directory server
 
     def create_header(self, message: str) -> str:
         header = f"{len(message):<5}"
         return header
 
-    def triple_layer_encryption(self, key_1: str, key_2: str, key_3: str, ip_1: str, ip_2: str, ip_3: str, port_1: int,
+    def triple_layer_encryption(self, rsa_key_1: bytes, rsa_key_2: bytes, rsa_key_3: bytes, ip_1: str, ip_2: str,
+                                ip_3: str, port_1: int,
                                 port_2: int, port_3: int, message: str) -> str:
-        def encrypt(key, data):
-            return data[::-1]
 
-        encrypted_message = encrypt(key_1, message)
+        aes_key_1 = generate_aes_key()
+        aes_key_2 = generate_aes_key()
+        aes_key_3 = generate_aes_key()
+
+        encrypted_message = aes_encrypt(message, aes_key_1).decode('utf-8')
         metadata_1 = {"ip": ip_1, "port": port_1}
         layer_1_data = {"message": encrypted_message, "metadata": metadata_1}
 
-        encrypted_layer_1 = encrypt(key_2, json.dumps(layer_1_data))
+        encrypted_layer_1 = aes_encrypt(json.dumps(layer_1_data), aes_key_2).decode('utf-8')
         metadata_2 = {"ip": ip_2, "port": port_2}
         layer_2_data = {"message": encrypted_layer_1, "metadata": metadata_2}
 
-        encrypted_layer_2 = encrypt(key_3, json.dumps(layer_2_data))
+        encrypted_layer_2 = aes_encrypt(json.dumps(layer_2_data), aes_key_3).decode('utf-8')
         metadata_3 = {"ip": ip_3, "port": port_3}
         layer_3_data = {"message": encrypted_layer_2, "metadata": metadata_3}
 
-        return base64.b64encode(json.dumps(layer_3_data).encode()).decode('utf-8')
+        encrypted_aes_key_1 = rsa_encrypt(aes_key_1, rsa_key_1).decode('utf-8')
+        encrypted_aes_key_2 = rsa_encrypt(aes_key_2, rsa_key_2).decode('utf-8')
+        encrypted_aes_key_3 = rsa_encrypt(aes_key_3, rsa_key_3).decode('utf-8')
+
+        final_payload = {
+            "data": layer_3_data,
+            "keys": {
+                "key_1": encrypted_aes_key_1,
+                "key_2": encrypted_aes_key_2,
+                "key_3": encrypted_aes_key_3
+            }
+        }
+
+        return base64.b64encode(json.dumps(final_payload).encode()).decode('utf-8')
 
     def write(self, message: str) -> None:
         header = self.create_header(message)
-        s.send(header.encode("utf-8"))
-        s.send(message.encode("utf-8"))
+        self.s.send(header.encode("utf-8"))
+        self.s.send(message.encode("utf-8"))
+
+    def receive_message(self):
+        try:
+            expected_message_len = int(self.s.recv(5).decode("utf-8"))
+            received_message = self.s.recv(expected_message_len)
+
+            if len(received_message) != expected_message_len:
+                raise ConnectionError("Received message is not equal to expected message length")
+
+            return received_message
+
+        except Exception as e:
+
+            print(f"Error receiving the message: {e}")
+
+            return None
 
     def choice(self) -> None:
         while True:
@@ -62,16 +93,16 @@ class Client:
                     self.write(json.dumps(request))
 
                     try:
-                        response_len = int(s.recv(5).decode("utf-8"))
+                        response_len = int(self.s.recv(5).decode("utf-8"))
 
                         data = bytearray()
                         while len(data) < response_len:
-                            packet = s.recv(response_len - len(data))
+                            packet = self.s.recv(response_len - len(data))
                             if not packet:
                                 print("Error receiving response")
                                 break
                             data.extend(packet)
-                        response = decrypt_message(data)
+                        response = rsa_decrypt(data)
 
                     except:
                         print("Error receiving response")
@@ -88,32 +119,48 @@ class Client:
                         "stage": 1,
                         "file_length": length
                     }
-                    json.dumps(first_stage_of_post)
+                    self.write(json.dumps(first_stage_of_post))
 
-                    s.send(json.dumps(first_stage_of_post).encode("utf-8"))
+                    if self.s.recv(2).decode("utf-8") == "Ok":
+                        self.s.send(f_base64)
 
-                    if s.recv(2).decode("utf-8") == "Ok":
-                        s.send(f_base64)
+    def end_connection(self):
+        self.s.close()
+        
+    def client_connect(self, ip, port):
+        self.s.connect((ip, port))
 
 
 def main():
     client_ip = "127.0.0.1"
     client_port = 50000
     client = Client(client_ip, client_port)
-    with open('../node/public.pem', 'r') as file:
-        key_1 = file.read()
+    with open('../node/public.pem', 'rb') as file:
+        rsa_key_1 = file.read()
 
-    with open('../keys/klucz_1.pem') as file:
-        key_2 = file.read()
+    with open('../keys/klucz_1.pem', 'rb') as file:
+        rsa_key_2 = file.read()
 
-    with open('../keys/klucz_2.pem') as file:
-        key_3 = file.read()
+    with open('../keys/klucz_2.pem', 'rb') as file:
+        rsa_key_3 = file.read()
 
-    triple_edict = client.triple_layer_encryption(key_1, key_2, key_3, '127.0.0.1', '87.206.157.239', '87.206.157.239',
+    triple_edict = client.triple_layer_encryption(rsa_key_1, rsa_key_2, rsa_key_3, '127.0.0.1', '87.206.157.239',
+                                                  '87.206.157.239',
                                                   50001, 50005, 50003, 'huj')
     print(triple_edict)
-    client.connect('127.0.0.1', 50001)
+    client.connect_to_direct_server('127.0.0.1')
+    client.end_connection()
+    
+    client.client_connect('127.0.0.1', 50001)
     client.write(triple_edict)
+
+    while True:
+        message = client.receive_message()
+        if message is not None:
+            print(message.decode("utf-8"))
+            break
+
+    client.end_connection()
 
 
 if __name__ == "__main__":
