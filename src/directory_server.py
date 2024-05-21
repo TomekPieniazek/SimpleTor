@@ -17,19 +17,34 @@ class Server:
         second_layer = ['79.190.177.172']  # Operują na porcie 50002
         last_layer = ['87.206.157.239']  # Operują na porcie 50003
         main_data_server = ['79.190.177.172']  # Operują na porcie 50004
-        global x
+
+        client_ip = "127.0.0.1"
+        client_port = 50000
+        client = Client(client_ip, client_port)
+        with open('../node/public.pem', 'r') as file:
+            key_1 = file.read()
+
+        with open('../keys/klucz_1.pem') as file:
+            key_2 = file.read()
+
+        with open('../keys/klucz_2.pem') as file:
+            key_3 = file.read()
+
         x = {
             "first_layer": choice(first_layer),
             "second_layer": choice(second_layer),
             "last_layer": choice(last_layer),
-            "main_data_server": choice(main_data_server)
+            "key_1": key_1,
+            "key_2": key_2,
+            "key_3": key_3,
+            "port_1": 50001,
+            "port_2": 50002,
+            "port_3": 50003,
         }
 
         while True:
             s.listen(5)
             client, addr = s.accept()
-
-
             client_handler = threading.Thread(target=self.handle_client, args=(client,))
             client_handler.start()
 
@@ -43,17 +58,13 @@ class Server:
             message.decode("utf-8")
 
     def handle_client(self, client):
-        message = self.receive(client)
+        x = {
+            "Node_1": [choice(first_layer), key_1, 50001],
+            "Node_2": [choice(second_layer), key_2, 50002],
+            "Node_3": [choice(last_layer), key_3, 50003],
+        }
 
-        match message:
-            case "get":
-                client.send(json.dumps(x).encode("utf-8"))
-            case "get_second_connection":
-                client.send(x["second_layer"].encode("utf-8"))
-            case "get_last_connection":
-                client.send(x["last_layer"].encode("utf-8"))
-            case "get_main_data_server":
-                client.send(x["main_data_server"].encode("utf-8"))
+        s.send(json.dumps(x).encode("utf-8"))
 
 
 def main():
