@@ -27,29 +27,20 @@ class Client:
         aes_key_2 = generate_aes_key()
         aes_key_3 = generate_aes_key()
 
-        encrypted_message = aes_encrypt(message, aes_key_1).decode('utf-8')
+        encrypted_message = aes_encrypt(message, rsa_key_1).decode('utf-8')
         metadata_1 = {"ip": ip_1, "port": port_1}
         layer_1_data = {"message": encrypted_message, "metadata": metadata_1}
 
-        encrypted_layer_1 = aes_encrypt(json.dumps(layer_1_data), aes_key_2).decode('utf-8')
+        encrypted_layer_1 = aes_encrypt(json.dumps(layer_1_data), rsa_key_2).decode('utf-8')
         metadata_2 = {"ip": ip_2, "port": port_2}
         layer_2_data = {"message": encrypted_layer_1, "metadata": metadata_2}
 
-        encrypted_layer_2 = aes_encrypt(json.dumps(layer_2_data), aes_key_3).decode('utf-8')
+        encrypted_layer_2 = aes_encrypt(json.dumps(layer_2_data), rsa_key_3).decode('utf-8')
         metadata_3 = {"ip": ip_3, "port": port_3}
         layer_3_data = {"message": encrypted_layer_2, "metadata": metadata_3}
 
-        encrypted_aes_key_1 = rsa_encrypt(aes_key_1, rsa_key_1).decode('utf-8')
-        encrypted_aes_key_2 = rsa_encrypt(aes_key_2, rsa_key_2).decode('utf-8')
-        encrypted_aes_key_3 = rsa_encrypt(aes_key_3, rsa_key_3).decode('utf-8')
-
         final_payload = {
             "data": layer_3_data,
-            "keys": {
-                "key_1": encrypted_aes_key_1,
-                "key_2": encrypted_aes_key_2,
-                "key_3": encrypted_aes_key_3
-            }
         }
 
         return base64.b64encode(json.dumps(final_payload).encode()).decode('utf-8')
@@ -135,7 +126,6 @@ def main():
     client_ip = "127.0.0.1"
     client_port = 50000
     client = Client(client_ip, client_port)
-
 
     with open('../node/public.pem', 'rb') as file:
         rsa_key_1 = file.read()
