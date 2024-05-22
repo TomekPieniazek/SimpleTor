@@ -1,6 +1,8 @@
 import socket
 import threading
 import json
+from rsa.rsa import aes_encrypt
+import base64
 
 
 class DataServer:
@@ -13,13 +15,18 @@ class DataServer:
     def client_handler(self, client):
         while True:
             message = json.loads(self.receive_message(client))
+            nodes = message["route"]
 
             if message["type"] == "GET":
                 to_send = self.extract_data(self.default_file_path)
+                self.send_message(self.triple_encryption(to_send, nodes), client)
 
             elif message["type"] == "POST":
                 data = message["data"]
                 self.add_data(self.default_file_path, data)
+
+            elif message["type"] == "END":
+                client.close()
 
             else:
                 pass
@@ -65,8 +72,23 @@ class DataServer:
             return None
 
     def triple_encryption(self, message, nodes):
+        i = 0
+
         for node in nodes:
-            pass
+            ip, port, key = node[0], node[1], node[2]
+
+            metadata = {"ip": ip, "port": port}
+            encrypted_message = aes_encrypt(message, key).decode('utf-8')
+            layer_data = {"message": encrypted_message, "metadata": metadata}
+
+            if i < len(nodes) - 1:
+                next_rsa_key = nodes[i + 1][2]
+                message = aes_encrypt(json.dumps(layer_data), next_rsa_key).decode('utf-8')
+            else:
+                payload = {"data": layer_data}
+                message = base64.b64encode(json.dumps(payload).encode()).decode('utf-8')
+
+        return message
 
     def start(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

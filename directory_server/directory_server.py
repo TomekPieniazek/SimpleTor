@@ -38,6 +38,18 @@ class Server:
 
             return None
 
+    def create_header(self, encoded_message):
+        message_length = len(encoded_message)
+
+        if message_length >= 10_000:
+            raise ValueError("Message is too long")
+
+        return f"{message_length:>5}".encode("utf-8")
+    def send_message(self, encoded_message, client_socket):
+        header = self.create_header(encoded_message)
+
+        client_socket.sendall(header + encoded_message)
+
     def client_handler(self, client):
         received_message = self.receive(client)
 
@@ -45,14 +57,13 @@ class Server:
 
         if message["type"] == "POST":
             self.node_list[message["name"]] = (message["ip"], message["port"], message["public_key"])
-            client.send("Node registered successfully".encode("utf-8"))
 
         elif message["type"] == "GET":
             random_nodes = random.sample(list(self.node_list.keys()), 3)
-            client.send(json.dumps(random_nodes).encode("utf-8"))
+            self.send_message(json.dumps(random_nodes).encode("utf-8"), client)
 
         else:
-            client.send("Invalid request".encode("utf-8"))
+            self.send_message("Invalid request".encode("utf-8"), client)
 
 
 def main():

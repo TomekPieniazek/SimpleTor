@@ -2,7 +2,7 @@ import base64
 import socket
 import json
 import random
-from rsa.rsa import rsa_encrypt, rsa_decrypt, aes_encrypt, aes_decrypt, generate_aes_key
+from rsa.rsa import rsa_encrypt, rsa_decrypt, aes_encrypt, aes_decrypt
 from typing import Any, Dict, Union
 
 
@@ -23,10 +23,6 @@ class Client:
                                 ip_3: str, port_1: int,
                                 port_2: int, port_3: int, message: str) -> str:
 
-        aes_key_1 = generate_aes_key()
-        aes_key_2 = generate_aes_key()
-        aes_key_3 = generate_aes_key()
-
         encrypted_message = aes_encrypt(message, rsa_key_1).decode('utf-8')
         metadata_1 = {"ip": ip_1, "port": port_1}
         layer_1_data = {"message": encrypted_message, "metadata": metadata_1}
@@ -39,11 +35,11 @@ class Client:
         metadata_3 = {"ip": ip_3, "port": port_3}
         layer_3_data = {"message": encrypted_layer_2, "metadata": metadata_3}
 
-        final_payload = {
+        payload = {
             "data": layer_3_data,
         }
 
-        return base64.b64encode(json.dumps(final_payload).encode()).decode('utf-8')
+        return base64.b64encode(json.dumps(payload).encode()).decode('utf-8')
 
     def write(self, message: str) -> None:
         header = self.create_header(message)
