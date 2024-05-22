@@ -5,8 +5,6 @@ from rsa.rsa import generate_rsa_key_pair
 
 
 def generate_key_pair():
-
-
     private_key_path = "private.pem"
     public_key_path = "public.pem"
 

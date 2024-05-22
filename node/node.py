@@ -99,6 +99,8 @@ class Node:
 
             self.send_message(message, directory_socket)
 
+            directory_socket.close()
+
         except ConnectionError as e:
             print(f"Error connecting to server {e}")
 

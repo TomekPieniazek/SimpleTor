@@ -34,7 +34,7 @@ class Server:
 
         except Exception as e:
 
-            print(f"Error connecting to directory server: {e}")
+            print(f"Error receiving the message: {e}")
 
             return None
 
@@ -49,11 +49,10 @@ class Server:
 
         elif message["type"] == "GET":
             random_nodes = random.sample(list(self.node_list.keys()), 3)
+            client.send(json.dumps(random_nodes).encode("utf-8"))
 
         else:
             client.send("Invalid request".encode("utf-8"))
-        node = random.choice(list(self.node_list.keys()))
-        client.send(json.dumps(self.node_list[node]).encode("utf-8"))
 
 
 def main():

@@ -13,7 +13,7 @@ class Client:
 
     def connect_to_direct_server(self, ip: str) -> None:
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.s.connect((ip, 50005))  # 50005 because this is the directory server
+        self.s.connect((ip, 50005))
 
     def create_header(self, message: str) -> str:
         header = f"{len(message):<5}"
@@ -66,7 +66,7 @@ class Client:
 
             return None
 
-    def choice(self) -> None:
+    def client_handler(self) -> None:
         while True:
             print("Choose an option:")
             print("1. Get")
