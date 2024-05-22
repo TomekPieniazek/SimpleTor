@@ -5,16 +5,16 @@ The SimpleTor project is a Python-based application that simulates the functiona
 
 ## Components
 
-### Client (`src/client.py`)
+### Client (`client/client.py`)
 The client is responsible for initiating the connection and sending requests. It uses triple layer encryption to encrypt the data before sending it to the first node. The client also handles the decryption of the response data.
 
 ### Node (`node/node.py`)
 Nodes are intermediaries in the network. They receive encrypted data from the client or a previous node, decrypt it to find out the next node in the path, and forward the data to the next node. Each node only knows about the previous and next node in the path, ensuring the anonymity of the client.
 
-### Directory Server (`src/directory_server.py`)
+### Directory Server (`directory_server/directory_server.py`)
 The directory server is responsible for managing the nodes in the network. It provides the client with the list of nodes that can be used to form a path for the data.
 
-### Data Server (`src/main_data_server.py`)
+### Data Server (`data/main_data_server.py`)
 The data server is the final destination of the client's request. It receives the request from the last node in the path, processes it, and sends the response back through the same path.
 
 ### RSA Encryption (`rsa/rsa.py`)
@@ -37,7 +37,6 @@ The RSA module provides functions for RSA encryption and decryption. It is used 
 - `src/main_data_server.py`: Contains the DataServer class which is the final destination of the client's request.
 - `rsa/rsa.py`: Provides functions for RSA encryption and decryption.
 - `node/node_setup.py`: Contains the setup script for the Node.
-- `src/prox.py`: Contains the setup script for the Proxy.
 
 ## Dependencies
 - Python 3.8 or higher
